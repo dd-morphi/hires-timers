@@ -15,7 +15,7 @@ namespace TimerTickVerifier
         {
             if (args.Length == 0)
             {
-                Console.WriteLine("Give timer resolution");
+                Console.WriteLine("Give timer resolution in ms");
                 return;
             }
 
@@ -55,7 +55,7 @@ namespace TimerTickVerifier
 
             Console.WriteLine("System.Threading timer");
             stopWatch.Start();
-            var stateTimer = new Timer(_ => milliseconds.Add(stopWatch.ElapsedMilliseconds),
+            var stateTimer = new System.Threading.Timer(_ => milliseconds.Add(stopWatch.ElapsedMilliseconds),
                 null, interval, interval);
 
             Thread.Sleep(testTime);
@@ -84,41 +84,21 @@ namespace TimerTickVerifier
 
         private static void PrintResults(List<long> milliseconds)
         {
-            // milliseconds.ForEach(x => Console.WriteLine(x.ToString()));
-
-            //var diffs = GetDiffs(milliseconds);
-            var diffs = GetDiffs2(milliseconds).ToList();
-            //Console.WriteLine("Diffs:");
-
-            //diffs.ForEach(x =>
-            //{
-            //    Console.WriteLine(x);
-            //});
-
+            var diffs = GetDiffs(milliseconds).ToList();
             var (average, stdDev) = GetMeanStandardDeviation(diffs);
+
             Console.WriteLine($"Avg: {average}, StdDev: {stdDev}");
         }
 
-        private static List<double> GetDiffs(List<long> milliseconds)
+        private static IEnumerable<double> GetDiffs(IList<long> milliseconds)
         {
-            if (milliseconds.Count < 2)
-                return new List<double>();
-
-            var diff = (double)milliseconds.First();
-            return milliseconds.Skip(1).Select(x =>
-            {
-                var previous = diff;
-                diff = x;
-                return (double)x - previous;
-            }).ToList();
-        }
-
-        private static IEnumerable<double> GetDiffs2(List<long> milliseconds)
-        {
+            var list = new List<double>();
             for (var i = 1; i < milliseconds.Count; i++)
             {
-                yield return (double)milliseconds[i] - milliseconds[i-1];
+                list.Add((double)milliseconds[i] - milliseconds[i - 1]);
             }
+
+            return list;
         }
 
         private static Tuple<double, double> GetMeanStandardDeviation(ICollection<double> values)
